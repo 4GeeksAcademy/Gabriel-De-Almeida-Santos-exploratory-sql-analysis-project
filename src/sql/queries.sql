@@ -102,14 +102,18 @@ JOIN species s ON o.species_id = s.id;
 
 -- MISSION 12
 -- Your query here;
-SELECT r.name AS region_name,
-       s.scientific_name,
-       COUNT(*) AS total_observations
-FROM observations o
-JOIN regions r ON o.region_id = r.id
-JOIN species s ON o.species_id = s.id
-GROUP BY r.name, s.scientific_name
-QUALIFY ROW_NUMBER() OVER (
-    PARTITION BY r.name
-    ORDER BY COUNT(*) DESC
-) = 1;
+SELECT region_name, scientific_name, total_observations
+FROM (
+    SELECT 
+        r.name AS region_name,
+        s.scientific_name,
+        COUNT(*) AS total_observations,
+        ROW_NUMBER() OVER (PARTITION BY r.name ORDER BY COUNT(*) DESC) AS rn
+    FROM observations o
+    JOIN regions r ON o.region_id = r.id
+    JOIN species s ON o.species_id = s.id
+    GROUP BY r.name, s.scientific_name
+) AS sub
+WHERE rn = 1;
+
+
